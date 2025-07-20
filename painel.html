@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 BossXit License Manager - Painel Admin</title>
+    <title>🔥 IA da Garena License Manager - Painel Admin</title>
     <style>
         * {
             margin: 0;
@@ -247,39 +247,6 @@
             opacity: 0.9;
         }
 
-        .log-area {
-            background: #1e1e1e;
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            color: #00ff00;
-            max-height: 300px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-
-        .export-section {
-            background: #2a2a2a;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .file-upload {
-            border: 2px dashed #555;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .file-upload:hover {
-            border-color: #ff6b35;
-            background: rgba(255, 107, 53, 0.1);
-        }
-
         .success-message {
             background: #27ae60;
             color: white;
@@ -301,7 +268,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🔥 BossXit License Manager</h1>
+        <h1>🔥 IA da Garena License Manager</h1>
         <p>Painel de Controle - Gerencie todas as licenças facilmente</p>
     </div>
 
@@ -330,10 +297,9 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('licenses')">📋 Gerenciar Licenças</button>
             <button class="tab" onclick="showTab('create')">➕ Criar Licença</button>
+            <button class="tab" onclick="showTab('trial')">🎁 Gerar Trials</button>
             <button class="tab" onclick="showTab('blacklist')">🚫 Blacklist</button>
             <button class="tab" onclick="showTab('bindings')">🔗 HWID Bindings</button>
-            <button class="tab" onclick="showTab('logs')">📊 Logs</button>
-            <button class="tab" onclick="showTab('export')">💾 Import/Export</button>
         </div>
 
         <!-- Tab: Gerenciar Licenças -->
@@ -343,8 +309,80 @@
                 <div class="form-group">
                     <input type="text" id="searchLicense" placeholder="🔍 Buscar por chave ou HWID..." oninput="filterLicenses()">
                 </div>
+                <button class="btn" onclick="loadLicensesFromRender()">🔄 Recarregar</button>
                 <div class="license-list" id="activeLicensesList">
-                    <!-- Licenças serão carregadas aqui -->
+                    <div style="color: #ccc;">Carregando licenças...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Gerar Trials -->
+        <div id="trial" class="tab-content">
+            <div class="card">
+                <h3>🎁 Gerar Chaves Trial - YouTube</h3>
+                <p style="margin-bottom: 20px; color: #ccc;">
+                    Gere chaves trial para liberar nos vídeos do YouTube. Você controla quando gerar!
+                </p>
+                
+                <div class="form-group">
+                    <label>Quantas chaves trial gerar:</label>
+                    <select id="trialQuantity">
+                        <option value="1">1 chave</option>
+                        <option value="3" selected>3 chaves</option>
+                        <option value="5">5 chaves</option>
+                        <option value="10">10 chaves</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duração do trial:</label>
+                    <select id="trialDuration">
+                        <option value="1">1 dia</option>
+                        <option value="3" selected>3 dias</option>
+                        <option value="7">7 dias</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Prefixo das chaves:</label>
+                    <select id="trialPrefix">
+                        <option value="TRIAL-YT">TRIAL-YT (YouTube)</option>
+                        <option value="FREE-TEST">FREE-TEST</option>
+                        <option value="GRATIS">GRATIS</option>
+                        <option value="YOUTUBE">YOUTUBE</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-success" onclick="gerarChavesTrial()">🎁 GERAR CHAVES TRIAL</button>
+                <button class="btn" onclick="copiarTrialsParaVideo()">📋 COPIAR PARA VÍDEO</button>
+                
+                <div class="success-message" id="trialSuccess"></div>
+                <div class="error-message" id="trialError"></div>
+                
+                <!-- Chaves Trial Geradas -->
+                <div id="trialsGeradas" style="display: none; margin-top: 20px;">
+                    <h4 style="color: #ff6b35;">🔑 Chaves Trial Geradas:</h4>
+                    <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; font-family: monospace;">
+                        <div id="listaTrials"></div>
+                    </div>
+                </div>
+                
+                <!-- Template para Vídeo -->
+                <div id="templateVideo" style="display: none; margin-top: 20px;">
+                    <h4 style="color: #ff6b35;">📺 Template para Vídeo:</h4>
+                    <div style="background: #2a2a2a; padding: 15px; border-radius: 8px;">
+                        <textarea id="textoVideo" readonly style="width: 100%; height: 120px; background: #1e1e1e; color: #fff; border: 1px solid #555; padding: 10px; border-radius: 5px;"></textarea>
+                        <button class="btn" onclick="copiarTextoVideo()" style="margin-top: 10px;">📋 Copiar Texto</button>
+                    </div>
+                </div>
+                
+                <!-- Trials Ativos -->
+                <div style="margin-top: 30px;">
+                    <h4 style="color: #ff6b35;">⏰ Trials Ativos Atualmente:</h4>
+                    <button class="btn" onclick="carregarTrialsAtivos()">🔄 Atualizar Lista</button>
+                    <div class="license-list" id="trialsAtivosList">
+                        <div style="color: #ccc;">Clique em "Atualizar Lista" para ver trials ativos</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -355,32 +393,10 @@
                 <h3>➕ Criar Nova Licença</h3>
                 <div class="form-group">
                     <label>Chave da Licença:</label>
-                    <input type="text" id="newLicenseKey" placeholder="Ex: PREMIUM-2024-001">
+                    <input type="text" id="newLicenseKey" placeholder="Ex: PREMIUM-2025-001">
                     <button class="btn" onclick="generateRandomKey()">🎲 Gerar Aleatória</button>
                 </div>
-                <div class="form-group">
-                    <label>HWID do Cliente (opcional):</label>
-                    <input type="text" id="newLicenseHwid" placeholder="Ex: A1B2C3D4E5F6G7H8">
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Licença:</label>
-                    <select id="licenseType">
-                        <option value="premium">Premium</option>
-                        <option value="vip">VIP</option>
-                        <option value="trial">Trial</option>
-                        <option value="mensal">Mensal</option>
-                        <option value="anual">Anual</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Valor Pago (R$):</label>
-                    <input type="number" id="licensePrice" placeholder="Ex: 50">
-                </div>
-                <div class="form-group">
-                    <label>Observações:</label>
-                    <textarea id="licenseNotes" placeholder="Ex: Cliente do WhatsApp, pagou via PIX..."></textarea>
-                </div>
-                <button class="btn" onclick="createLicense()">✅ Criar Licença</button>
+                <button class="btn" onclick="createLicenseOnRender()">✅ Criar Licença</button>
                 <div class="success-message" id="createSuccess"></div>
                 <div class="error-message" id="createError"></div>
             </div>
@@ -395,9 +411,10 @@
                     <input type="text" id="banItem" placeholder="Digite a chave ou HWID para banir">
                     <textarea id="banReason" placeholder="Motivo do banimento..."></textarea>
                 </div>
-                <button class="btn btn-danger" onclick="addToBlacklist()">🚫 Adicionar à Blacklist</button>
+                <button class="btn btn-danger" onclick="addToBlacklistOnRender()">🚫 Adicionar à Blacklist</button>
+                <button class="btn" onclick="loadBlacklistFromRender()">🔄 Recarregar</button>
                 <div class="license-list" id="blacklistItems">
-                    <!-- Items banidos serão mostrados aqui -->
+                    <div style="color: #ccc;">Carregando blacklist...</div>
                 </div>
             </div>
         </div>
@@ -409,303 +426,201 @@
                 <p style="margin-bottom: 20px; color: #ccc;">
                     Aqui você vincula chaves a HWIDs específicos. Quando cliente troca de PC, você atualiza o HWID.
                 </p>
-                <div class="form-group">
-                    <label>Chave da Licença:</label>
-                    <input type="text" id="bindingKey" placeholder="Ex: PREMIUM-2024-001">
-                </div>
-                <div class="form-group">
-                    <label>HWID do PC:</label>
-                    <input type="text" id="bindingHwid" placeholder="Ex: A1B2C3D4E5F6G7H8">
-                </div>
-                <button class="btn" onclick="updateBinding()">🔗 Atualizar Binding</button>
+                <button class="btn" onclick="loadBindingsFromRender()">🔄 Recarregar Bindings</button>
                 <div class="license-list" id="bindingsList">
-                    <!-- Bindings serão mostrados aqui -->
+                    <div style="color: #ccc;">Carregando bindings...</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tab: Logs -->
-        <div id="logs" class="tab-content">
-            <div class="card">
-                <h3>📊 Logs do Sistema</h3>
-                <button class="btn" onclick="refreshLogs()">🔄 Atualizar Logs</button>
-                <button class="btn btn-warning" onclick="clearLogs()">🗑️ Limpar Logs</button>
-                <div class="log-area" id="systemLogs">
-                    Carregando logs...
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Import/Export -->
-        <div id="export" class="tab-content">
-            <div class="card">
-                <h3>💾 Import/Export de Dados</h3>
-                <div class="grid">
-                    <div>
-                        <h4>📤 Exportar Dados</h4>
-                        <button class="btn btn-success" onclick="exportLicenses()">📋 Exportar Licenças</button>
-                        <button class="btn btn-success" onclick="exportBlacklist()">🚫 Exportar Blacklist</button>
-                        <button class="btn btn-success" onclick="exportBindings()">🔗 Exportar Bindings</button>
-                        <button class="btn btn-success" onclick="exportAllData()">📦 Exportar Tudo</button>
-                    </div>
-                    <div>
-                        <h4>📥 Importar Dados</h4>
-                        <div class="file-upload" onclick="document.getElementById('importFile').click()">
-                            <p>🗂️ Clique para selecionar arquivo</p>
-                            <p style="font-size: 0.9em; color: #999;">Formatos: .txt, .json</p>
-                        </div>
-                        <input type="file" id="importFile" style="display: none;" accept=".txt,.json" onchange="importData()">
-                    </div>
-                </div>
-            </div>
-
-            <div class="export-section">
-                <h3>🌐 URLs para GitHub/Pastebin</h3>
-                <div class="form-group">
-                    <label>URL Licenças Ativas:</label>
-                    <input type="text" id="urlLicenses" placeholder="https://raw.githubusercontent.com/user/repo/main/licenses.txt">
-                </div>
-                <div class="form-group">
-                    <label>URL Blacklist:</label>
-                    <input type="text" id="urlBlacklist" placeholder="https://raw.githubusercontent.com/user/repo/main/blacklist.txt">
-                </div>
-                <div class="form-group">
-                    <label>URL Bindings:</label>
-                    <input type="text" id="urlBindings" placeholder="https://raw.githubusercontent.com/user/repo/main/bindings.txt">
-                </div>
-                <button class="btn" onclick="generateUploadFiles()">🚀 Gerar Arquivos para Upload</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Dados do sistema
-        let licenses = JSON.parse(localStorage.getItem('bossxit_licenses') || '[]');
-        let blacklist = JSON.parse(localStorage.getItem('bossxit_blacklist') || '[]');
-        let bindings = JSON.parse(localStorage.getItem('bossxit_bindings') || '[]');
-        let logs = JSON.parse(localStorage.getItem('bossxit_logs') || '[]');
-
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
-            updateStats();
-            loadLicenses();
-            loadBlacklist();
-            loadBindings();
-            loadLogs();
+            loadLicensesFromRender();
+            loadBlacklistFromRender();
+            loadBindingsFromRender();
         });
 
         // Gerenciamento de tabs
         function showTab(tabName) {
-            // Remove active de todas as tabs
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            // Ativa a tab selecionada
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
         }
 
-        // Atualizar estatísticas
-        function updateStats() {
-            const activeLicensesCount = licenses.filter(l => l.status === 'active').length;
-            const expiredLicensesCount = licenses.filter(l => l.status === 'expired').length;
-            const bannedLicensesCount = blacklist.length;
-            const totalRevenue = licenses.reduce((sum, l) => sum + (parseFloat(l.price) || 0), 0);
-
-            document.getElementById('activeLicenses').textContent = activeLicensesCount;
-            document.getElementById('expiredLicenses').textContent = expiredLicensesCount;
-            document.getElementById('bannedLicenses').textContent = bannedLicensesCount;
-            document.getElementById('totalRevenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
-        }
-
         // Gerar chave aleatória
         function generateRandomKey() {
-            const types = ['PREMIUM', 'VIP', 'TRIAL', 'MENSAL', 'ANUAL'];
+            const types = ['IADAGARENA', 'PREMIUM-2025', 'BOSS-VIP', 'GARENA-PRO', 'ELITE-USER'];
             const type = types[Math.floor(Math.random() * types.length)];
-            const year = new Date().getFullYear();
             const random = Math.floor(Math.random() * 999) + 1;
-            const key = `${type}-${year}-${random.toString().padStart(3, '0')}`;
+            const key = `${type}-${random.toString().padStart(3, '0')}`;
             document.getElementById('newLicenseKey').value = key;
         }
 
-        // Criar nova licença
-        function createLicense() {
-            const key = document.getElementById('newLicenseKey').value.trim();
-            const hwid = document.getElementById('newLicenseHwid').value.trim();
-            const type = document.getElementById('licenseType').value;
-            const price = document.getElementById('licensePrice').value;
-            const notes = document.getElementById('licenseNotes').value.trim();
+        // Carregar licenças do Render
+        function loadLicensesFromRender() {
+            fetch('/api/read-file/licenses.txt')
+                .then(response => response.text())
+                .then(licenses => {
+                    console.log('Licenças carregadas:', licenses);
+                    
+                    const list = document.getElementById('activeLicensesList');
+                    list.innerHTML = '';
+                    
+                    const licenseArray = licenses.split('\n').filter(l => l.trim() !== '');
+                    
+                    licenseArray.forEach((license, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'license-item';
+                        item.innerHTML = `
+                            <div class="license-info">
+                                <div class="license-key">${license.trim()}</div>
+                                <div class="license-hwid">Status: Ativa</div>
+                                <div style="font-size: 0.8em; color: #999;">
+                                    Tipo: Premium | Criado: ${new Date().toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div>
+                                <span class="license-status status-active">✅ ATIVA</span>
+                                <div style="margin-top: 10px;">
+                                    <button class="btn btn-danger" onclick="banLicenseFromRender('${license.trim()}')">🚫 Banir</button>
+                                </div>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                    
+                    // Atualiza estatísticas
+                    document.getElementById('activeLicenses').textContent = licenseArray.length;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar licenças:', error);
+                    document.getElementById('activeLicensesList').innerHTML = 
+                        '<div style="color: red;">❌ Erro ao conectar com servidor</div>';
+                });
+        }
 
+        // Carregar blacklist do Render
+        function loadBlacklistFromRender() {
+            fetch('/api/read-file/blacklist.txt')
+                .then(response => response.text())
+                .then(blacklist => {
+                    const list = document.getElementById('blacklistItems');
+                    list.innerHTML = '';
+                    
+                    const blacklistArray = blacklist.split('\n').filter(b => b.trim() !== '');
+                    
+                    if (blacklistArray.length === 0) {
+                        list.innerHTML = '<div style="color: #ccc;">Nenhum item na blacklist</div>';
+                        document.getElementById('bannedLicenses').textContent = '0';
+                        return;
+                    }
+                    
+                    blacklistArray.forEach((item, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'license-item banned';
+                        div.innerHTML = `
+                            <div class="license-info">
+                                <div class="license-key">${item.trim()}</div>
+                                <div style="font-size: 0.9em; color: #ccc;">Banido: ${new Date().toLocaleDateString()}</div>
+                            </div>
+                            <div>
+                                <span class="license-status status-banned">🚫 BANIDO</span>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                    });
+                    
+                    // Atualiza estatísticas  
+                    document.getElementById('bannedLicenses').textContent = blacklistArray.length;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar blacklist:', error);
+                    document.getElementById('blacklistItems').innerHTML = 
+                        '<div style="color: red;">❌ Erro ao carregar blacklist</div>';
+                });
+        }
+
+        // Carregar bindings do Render
+        function loadBindingsFromRender() {
+            fetch('/api/read-file/bindings.txt')
+                .then(response => response.text())
+                .then(bindings => {
+                    const list = document.getElementById('bindingsList');
+                    list.innerHTML = '';
+                    
+                    const bindingsArray = bindings.split('\n').filter(b => b.trim() !== '');
+                    
+                    if (bindingsArray.length === 0) {
+                        list.innerHTML = '<div style="color: #ccc;">Nenhum binding encontrado</div>';
+                        return;
+                    }
+                    
+                    bindingsArray.forEach((binding, index) => {
+                        const parts = binding.split('|');
+                        if (parts.length >= 2) {
+                            const div = document.createElement('div');
+                            div.className = 'license-item';
+                            div.innerHTML = `
+                                <div class="license-info">
+                                    <div class="license-key">${parts[0].trim()}</div>
+                                    <div class="license-hwid">HWID: ${parts[1].trim()}</div>
+                                </div>
+                                <div>
+                                    <span class="license-status status-active">🔗 VINCULADO</span>
+                                </div>
+                            `;
+                            list.appendChild(div);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar bindings:', error);
+                    document.getElementById('bindingsList').innerHTML = 
+                        '<div style="color: red;">❌ Erro ao carregar bindings</div>';
+                });
+        }
+
+        // Criar licença no Render
+        function createLicenseOnRender() {
+            const key = document.getElementById('newLicenseKey').value.trim();
+            
             if (!key) {
                 showError('createError', 'Chave da licença é obrigatória!');
                 return;
             }
 
-            // Verifica se já existe
-            if (licenses.find(l => l.key === key)) {
-                showError('createError', 'Esta chave já existe!');
-                return;
-            }
-
-            const license = {
-                key: key,
-                hwid: hwid,
-                type: type,
-                price: price || 0,
-                notes: notes,
-                status: 'active',
-                created: new Date().toISOString(),
-                lastUsed: null
-            };
-
-            licenses.push(license);
-            
-            // Se tem HWID, adiciona ao binding
-            if (hwid) {
-                bindings.push({ key: key, hwid: hwid, updated: new Date().toISOString() });
-                localStorage.setItem('bossxit_bindings', JSON.stringify(bindings));
-            }
-
-            localStorage.setItem('bossxit_licenses', JSON.stringify(licenses));
-            
-            // Log
-            addLog(`LICENÇA CRIADA: ${key} - Tipo: ${type} - R$ ${price}`);
-            
-            updateStats();
-            loadLicenses();
-            showSuccess('createSuccess', `Licença ${key} criada com sucesso!`);
-            
-            // Limpa form
-            document.getElementById('newLicenseKey').value = '';
-            document.getElementById('newLicenseHwid').value = '';
-            document.getElementById('licensePrice').value = '';
-            document.getElementById('licenseNotes').value = '';
-        }
-
-        // Carregar licenças
-        function loadLicenses() {
-            const list = document.getElementById('activeLicensesList');
-            list.innerHTML = '';
-
-            licenses.forEach((license, index) => {
-                const item = document.createElement('div');
-                item.className = `license-item ${license.status}`;
-                item.innerHTML = `
-                    <div class="license-info">
-                        <div class="license-key">${license.key}</div>
-                        <div class="license-hwid">HWID: ${license.hwid || 'Não vinculado'}</div>
-                        <div style="font-size: 0.8em; color: #999;">
-                            Tipo: ${license.type} | Valor: R$ ${license.price} | Criado: ${new Date(license.created).toLocaleDateString()}
-                        </div>
-                        ${license.notes ? `<div style="font-size: 0.8em; color: #ccc;">📝 ${license.notes}</div>` : ''}
-                    </div>
-                    <div>
-                        <span class="license-status status-${license.status}">
-                            ${license.status === 'active' ? '✅ ATIVA' : license.status === 'expired' ? '⏰ EXPIRADA' : '🚫 BANIDA'}
-                        </span>
-                        <div style="margin-top: 10px;">
-                            ${license.status === 'active' ? 
-                                `<button class="btn btn-warning" onclick="expireLicense(${index})">⏰ Expirar</button>
-                                 <button class="btn btn-danger" onclick="banLicense(${index})">🚫 Banir</button>` :
-                                `<button class="btn btn-success" onclick="reactivateLicense(${index})">✅ Reativar</button>`
-                            }
-                            <button class="btn btn-danger" onclick="deleteLicense(${index})">🗑️ Deletar</button>
-                        </div>
-                    </div>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        // Expirar licença
-        function expireLicense(index) {
-            if (confirm('Tem certeza que deseja expirar esta licença?')) {
-                licenses[index].status = 'expired';
-                licenses[index].expiredAt = new Date().toISOString();
-                localStorage.setItem('bossxit_licenses', JSON.stringify(licenses));
-                addLog(`LICENÇA EXPIRADA: ${licenses[index].key}`);
-                updateStats();
-                loadLicenses();
-            }
-        }
-
-        // Banir licença
-        function banLicense(index) {
-            const reason = prompt('Motivo do banimento:');
-            if (reason) {
-                const license = licenses[index];
-                blacklist.push({
-                    item: license.key,
-                    type: 'license',
-                    reason: reason,
-                    bannedAt: new Date().toISOString()
+            fetch('/api/read-file/licenses.txt')
+                .then(response => response.text())
+                .then(currentLicenses => {
+                    const newLicenses = currentLicenses + '\n' + key;
+                    return fetch('/api/update-file', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            filename: 'licenses.txt',
+                            content: newLicenses.trim()
+                        })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('createSuccess', `Licença ${key} criada com sucesso!`);
+                        loadLicensesFromRender();
+                        document.getElementById('newLicenseKey').value = '';
+                    }
+                })
+                .catch(error => {
+                    showError('createError', 'Erro ao criar licença: ' + error);
                 });
-                
-                licenses[index].status = 'banned';
-                licenses[index].bannedAt = new Date().toISOString();
-                licenses[index].banReason = reason;
-                
-                localStorage.setItem('bossxit_licenses', JSON.stringify(licenses));
-                localStorage.setItem('bossxit_blacklist', JSON.stringify(blacklist));
-                
-                addLog(`LICENÇA BANIDA: ${license.key} - Motivo: ${reason}`);
-                updateStats();
-                loadLicenses();
-                loadBlacklist();
-            }
         }
 
-        // Reativar licença
-        function reactivateLicense(index) {
-            if (confirm('Tem certeza que deseja reativar esta licença?')) {
-                const license = licenses[index];
-                licenses[index].status = 'active';
-                
-                // Remove da blacklist se estiver lá
-                blacklist = blacklist.filter(b => b.item !== license.key);
-                
-                localStorage.setItem('bossxit_licenses', JSON.stringify(licenses));
-                localStorage.setItem('bossxit_blacklist', JSON.stringify(blacklist));
-                
-                addLog(`LICENÇA REATIVADA: ${license.key}`);
-                updateStats();
-                loadLicenses();
-                loadBlacklist();
-            }
-        }
-
-        // Deletar licença
-        function deleteLicense(index) {
-            if (confirm('Tem certeza que deseja DELETAR esta licença? Esta ação não pode ser desfeita!')) {
-                const license = licenses[index];
-                licenses.splice(index, 1);
-                
-                // Remove bindings relacionados
-                bindings = bindings.filter(b => b.key !== license.key);
-                
-                localStorage.setItem('bossxit_licenses', JSON.stringify(licenses));
-                localStorage.setItem('bossxit_bindings', JSON.stringify(bindings));
-                
-                addLog(`LICENÇA DELETADA: ${license.key}`);
-                updateStats();
-                loadLicenses();
-                loadBindings();
-            }
-        }
-
-        // Filtrar licenças
-        function filterLicenses() {
-            const search = document.getElementById('searchLicense').value.toLowerCase();
-            const items = document.querySelectorAll('.license-item');
-            
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(search) ? 'flex' : 'none';
-            });
-        }
-
-        // Adicionar à blacklist
-        function addToBlacklist() {
+        // Adicionar à blacklist no Render
+        function addToBlacklistOnRender() {
             const item = document.getElementById('banItem').value.trim();
             const reason = document.getElementById('banReason').value.trim();
             
@@ -713,38 +628,263 @@
                 alert('Digite uma chave ou HWID para banir!');
                 return;
             }
+
+            fetch('/api/read-file/blacklist.txt')
+                .then(response => response.text())
+                .then(currentBlacklist => {
+                    const newBlacklist = currentBlacklist + '\n' + item;
+                    return fetch('/api/update-file', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            filename: 'blacklist.txt',
+                            content: newBlacklist.trim()
+                        })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`${item} adicionado à blacklist com sucesso!`);
+                        document.getElementById('banItem').value = '';
+                        document.getElementById('banReason').value = '';
+                        loadBlacklistFromRender();
+                    }
+                })
+                .catch(error => {
+                    alert('Erro ao banir: ' + error);
+                });
+        }
+
+        // Banir licença do Render
+        function banLicenseFromRender(license) {
+            if (confirm(`Tem certeza que deseja banir a licença ${license}?`)) {
+                fetch('/api/read-file/blacklist.txt')
+                    .then(response => response.text())
+                    .then(currentBlacklist => {
+                        const newBlacklist = currentBlacklist + '\n' + license;
+                        return fetch('/api/update-file', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                filename: 'blacklist.txt',
+                                content: newBlacklist.trim()
+                            })
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Licença ${license} banida com sucesso!`);
+                            loadLicensesFromRender();
+                            loadBlacklistFromRender();
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erro ao banir licença: ' + error);
+                    });
+            }
+        }
+
+        // Gerar chaves trial para YouTube
+        function gerarChavesTrial() {
+            const quantidade = parseInt(document.getElementById('trialQuantity').value);
+            const duracao = parseInt(document.getElementById('trialDuration').value);
+            const prefixo = document.getElementById('trialPrefix').value;
             
-            if (!reason) {
-                alert('Digite o motivo do banimento!');
+            const hoje = new Date();
+            const dia = hoje.getDate().toString().padStart(2, '0');
+            const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
+            
+            let chavesGeradas = [];
+            let textoCompleto = '';
+            
+            for (let i = 1; i <= quantidade; i++) {
+                const chave = `${prefixo}-${dia}${mes}-${i.toString().padStart(3, '0')}`;
+                chavesGeradas.push(chave);
+                textoCompleto += chave + '\n';
+            }
+            
+            // Adiciona as chaves no arquivo licenses.txt
+            fetch('/api/read-file/licenses.txt')
+                .then(response => response.text())
+                .then(currentLicenses => {
+                    const newLicenses = currentLicenses + '\n' + chavesGeradas.join('\n');
+                    return fetch('/api/update-file', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            filename: 'licenses.txt',
+                            content: newLicenses.trim()
+                        })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('trialSuccess', `${quantidade} chaves trial geradas com sucesso!`);
+                        
+                        // Mostra as chaves geradas
+                        document.getElementById('trialsGeradas').style.display = 'block';
+                        document.getElementById('listaTrials').innerHTML = chavesGeradas.map(chave => 
+                            `<div style="color: #4CAF50; margin: 5px 0;">${chave}</div>`
+                        ).join('');
+                        
+                        // Gera template para vídeo
+                        const templateTexto = `🔥 LIBEREI ${quantidade} ACESSOS GRÁTIS PARA TESTAR A IA DA GARENA! 🔥
+
+⚡ PRIMEIROS ${quantidade} QUE COMENTAREM "QUERO TESTAR" GANHAM ${duracao} DIAS GRÁTIS!
+
+🎁 CHAVES TRIAL (${duracao} dias cada):
+${chavesGeradas.map(chave => `✅ ${chave}`).join('\n')}
+
+📱 COMO USAR:
+1. Baixe o software no link da descrição
+2. Digite uma das chaves acima
+3. Aproveite ${duracao} dias de IA BRUTAL!
+
+⚠️ APENAS ${quantidade} CHAVES DISPONÍVEIS!
+⏰ VÁLIDAS POR ${duracao} DIAS A PARTIR DE HOJE!
+
+👇 COMENTA "QUERO TESTAR" E SEJA UM DOS SORTEADOS!`;
+
+                        document.getElementById('templateVideo').style.display = 'block';
+                        document.getElementById('textoVideo').value = templateTexto;
+                        
+                        loadLicensesFromRender();
+                    }
+                })
+                .catch(error => {
+                    showError('trialError', 'Erro ao gerar trials: ' + error);
+                });
+        }
+        
+        // Copiar trials para usar no vídeo
+        function copiarTrialsParaVideo() {
+            const trials = document.getElementById('listaTrials').textContent;
+            if (trials.trim() === '') {
+                alert('Gere as chaves trial primeiro!');
                 return;
             }
             
-            blacklist.push({
-                item: item,
-                type: item.length === 16 ? 'hwid' : 'license',
-                reason: reason,
-                bannedAt: new Date().toISOString()
+            navigator.clipboard.writeText(trials).then(() => {
+                alert('Chaves copiadas! Cole no seu vídeo!');
             });
-            
-            localStorage.setItem('bossxit_blacklist', JSON.stringify(blacklist));
-            addLog(`ADICIONADO À BLACKLIST: ${item} - Motivo: ${reason}`);
-            
-            document.getElementById('banItem').value = '';
-            document.getElementById('banReason').value = '';
-            
-            updateStats();
-            loadBlacklist();
+        }
+        
+        // Copiar texto completo do vídeo
+        function copiarTextoVideo() {
+            const texto = document.getElementById('textoVideo').value;
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Texto copiado! Cole na descrição do vídeo!');
+            });
+        }
+        
+        // Carregar trials ativos
+        function carregarTrialsAtivos() {
+            fetch('/api/read-file/licenses.txt')
+                .then(response => response.text())
+                .then(licenses => {
+                    const list = document.getElementById('trialsAtivosList');
+                    list.innerHTML = '';
+                    
+                    const licenseArray = licenses.split('\n').filter(l => l.trim() !== '');
+                    const trialsAtivos = licenseArray.filter(license => 
+                        license.includes('TRIAL') || license.includes('FREE') || license.includes('GRATIS') || license.includes('YOUTUBE')
+                    );
+                    
+                    if (trialsAtivos.length === 0) {
+                        list.innerHTML = '<div style="color: #ccc;">Nenhum trial ativo no momento</div>';
+                        return;
+                    }
+                    
+                    trialsAtivos.forEach((trial, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'license-item';
+                        item.innerHTML = `
+                            <div class="license-info">
+                                <div class="license-key">${trial.trim()}</div>
+                                <div class="license-hwid">Status: Trial Ativo</div>
+                                <div style="font-size: 0.8em; color: #f39c12;">
+                                    ⏰ Trial para YouTube
+                                </div>
+                            </div>
+                            <div>
+                                <span class="license-status" style="background: #f39c12;">🎁 TRIAL</span>
+                                <div style="margin-top: 10px;">
+                                    <button class="btn btn-danger" onclick="removerTrial('${trial.trim()}')">🗑️ Remover</button>
+                                </div>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar trials:', error);
+                });
+        }
+        
+        // Remover trial específico
+        function removerTrial(trial) {
+            if (confirm(`Tem certeza que deseja remover o trial: ${trial}?`)) {
+                fetch('/api/read-file/licenses.txt')
+                    .then(response => response.text())
+                    .then(currentLicenses => {
+                        const licensesArray = currentLicenses.split('\n');
+                        const newLicenses = licensesArray.filter(license => license.trim() !== trial).join('\n');
+                        
+                        return fetch('/api/update-file', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                filename: 'licenses.txt',
+                                content: newLicenses.trim()
+                            })
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Trial ${trial} removido com sucesso!`);
+                            carregarTrialsAtivos();
+                            loadLicensesFromRender();
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erro ao remover trial: ' + error);
+                    });
+            }
         }
 
-        // Carregar blacklist
-        function loadBlacklist() {
-            const list = document.getElementById('blacklistItems');
-            list.innerHTML = '';
+        // Filtrar licenças
+        function filterLicenses() {
+            const search = document.getElementById('searchLicense').value.toLowerCase();
+            const items = document.querySelectorAll('#activeLicensesList .license-item');
             
-            blacklist.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'license-item banned';
-                div.innerHTML = `
-                    <div class="license-info">
-                        <div class="license-key">${item.item}</div>
-                        <div style="font-size: 0.9em; color: #ccc;">
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(search) ? 'flex' : 'none';
+            });
+        }
+
+        // Funções de mensagem
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
