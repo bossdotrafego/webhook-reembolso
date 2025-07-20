@@ -1,24 +1,65 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 app.use(express.json());
+app.use(express.static('.'));
 
-app.post('webhook-reembolso', (req, res) = {
-    console.log('🚨 REEMBOLSO DETECTADO', req.body);
+// Webhook da Kiwify
+app.post('/webhook-reembolso', (req, res) => {
+    console.log('🚨 WEBHOOK RECEBIDO:', req.body);
     
-    const chave = req.body.custom_fields.license_key  
-                  `PREMIUM-2025-${req.body.order_id}`;
-
-    console.log('🔒 BLOQUEANDO CHAVE', chave);
-
-     Aqui você pode salvar a chave em um txt, banco ou repo GitHub
-    res.status(200).send('OK - Chave bloqueada');
+    try {
+        const chave = req.body.custom_fields?.license_key || 
+                      `PREMIUM-2025-${req.body.order_id}`;
+        
+        console.log('🔒 BLOQUEANDO CHAVE:', chave);
+        
+        const blacklistPath = path.join(__dirname, 'blacklist.txt');
+        let blacklist = '';
+        
+        if (fs.existsSync(blacklistPath)) {
+            blacklist = fs.readFileSync(blacklistPath, 'utf8');
+        }
+        
+        blacklist += '\n' + chave;
+        fs.writeFileSync(blacklistPath, blacklist.trim());
+        
+        const logEntry = `[${new Date().toISOString()}] REEMBOLSO: ${chave}\n`;
+        fs.appendFileSync('reembolsos.log', logEntry);
+        
+        res.status(200).send(`OK - Chave bloqueada: ${chave}`);
+        
+    } catch (error) {
+        console.error('❌ ERRO:', error);
+        res.status(500).send('Erro interno');
+    }
 });
 
-app.get('', (req, res) = {
-    res.send('🔧 Webhook Online');
+app.post('/api/update-file', (req, res) => {
+    try {
+        const { filename, content } = req.body;
+        fs.writeFileSync(filename, content);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.listen(3000, () = {
-    console.log('🎯 Webhook rodando na porta 3000');
+app.get('/api/read-file/:filename', (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const content = fs.readFileSync(filename, 'utf8');
+        res.send(content);
+    } catch (error) {
+        res.status(404).send('Arquivo não encontrado');
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`🎯 Webhook: /webhook-reembolso`);
+    console.log(`🖥️ Painel: /painel.html`);
 });
